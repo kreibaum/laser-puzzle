@@ -10,7 +10,7 @@ use Direction::*;
 /// guaranteed to be empty. (Proof of this follows from the assumption that this held previously +
 /// applying the movement rules)
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct LaserTip {
+pub struct LaserTip {
     position: I8Vec2,
     direction: Direction,
 }
@@ -35,6 +35,22 @@ impl LaserTip {
                 position: I8Vec2::new(-1, shift as i8),
                 direction,
             },
+        }
+    }
+
+    /// Deconstructs a laser that is on the border of the grid into constructor parameters that
+    /// enters the grid from this position.
+    pub fn deconstruct(&self) -> Option<(u8, Direction)> {
+        if self.position.x == -1 {
+            Some((self.position.y as u8, Right))
+        } else if self.position.x == GRID_SIZE as i8 {
+            Some((self.position.y as u8, Left))
+        } else if self.position.y == -1 {
+            Some((self.position.x as u8, Down))
+        } else if self.position.y == GRID_SIZE as i8 {
+            Some((self.position.x as u8, Up))
+        } else {
+            None
         }
     }
 
@@ -100,23 +116,31 @@ impl LaserTip {
         unreachable!("Logic error in laser movement. Movement rules not fully defined.")
     }
 
-    pub fn traverse_grid(self, grid: &AtomGrid) -> Option<Self> {
+    pub fn traverse_grid(self, grid: &AtomGrid) -> (Option<Self>, u8) {
         let mut laser = self;
-        loop {
-            laser = laser.move_once(grid)?; // ? handles absorption
-            if !laser.position.in_grid() {
-                return Some(laser);
+        for move_count in 1..=u8::MAX {
+            let l = laser.move_once(grid);
+
+            if let Some(l) = l {
+                if !l.position.in_grid() {
+                    return (Some(l), move_count);
+                } else {
+                    laser = l;
+                }
+            } else {
+                return (None, move_count);
             }
         }
+        panic!("Laser did not leave the grid after 255 moves. Infinite loop detected.");
     }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Eq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+pub enum Direction {
+    Up = 0,
+    Down = 1,
+    Left = 2,
+    Right = 3,
 }
 
 impl Direction {
@@ -162,6 +186,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_deconstruction() {
+        for i in 0..GRID_SIZE {
+            assert_eq!(
+                LaserTip::new(i as u8, Up).deconstruct(),
+                Some((i as u8, Up))
+            );
+            let mut l = LaserTip::new(i as u8, Up);
+            l.direction = l.direction.flip();
+            assert_eq!(l.deconstruct(), Some((i as u8, Up)));
+            assert_eq!(
+                LaserTip::new(i as u8, Down).deconstruct(),
+                Some((i as u8, Down))
+            );
+            assert_eq!(
+                LaserTip::new(i as u8, Left).deconstruct(),
+                Some((i as u8, Left))
+            );
+            assert_eq!(
+                LaserTip::new(i as u8, Right).deconstruct(),
+                Some((i as u8, Right))
+            );
+        }
+    }
+
+    #[test]
     fn test_laser_path() {
         let grid = AtomGrid::from_bitboard(35184640598018);
 
@@ -177,42 +226,42 @@ mod tests {
 
         // Restart the laser and let it traverse the grid
         let laser = LaserTip::new(0, Right);
-        let laser = laser.traverse_grid(&grid).expect("traversal possible");
+        let laser = laser.traverse_grid(&grid).0.expect("traversal possible");
         assert_eq!(laser.position, I8Vec2::new(8, 0));
 
         // When shining the laser in the second row, we expect a reflection towards the top
         let laser = LaserTip::new(1, Right);
-        let laser = laser.traverse_grid(&grid).expect("traversal possible");
+        let laser = laser.traverse_grid(&grid).0.expect("traversal possible");
         assert_eq!(laser.position, I8Vec2::new(1, -1));
 
         // Next laser is absorbed
         let laser = LaserTip::new(2, Right);
         let laser = laser.traverse_grid(&grid);
-        assert_eq!(laser, None);
+        assert_eq!(laser, (None, 3));
 
         // Next laser leaves the grid on the left side, but further down. It was reflected twice.
         let laser = LaserTip::new(3, Right);
-        let laser = laser.traverse_grid(&grid).expect("traversal possible");
+        let laser = laser.traverse_grid(&grid).0.expect("traversal possible");
         assert_eq!(laser.position, I8Vec2::new(-1, 5));
 
         // On y=4 the laser is absorbed again
         let laser = LaserTip::new(4, Right);
         let laser = laser.traverse_grid(&grid);
-        assert_eq!(laser, None);
+        assert_eq!(laser, (None, 4));
 
         // For y=5 the laser comes back to y=3 by symmetry
         let laser = LaserTip::new(5, Right);
-        let laser = laser.traverse_grid(&grid).expect("traversal possible");
+        let laser = laser.traverse_grid(&grid).0.expect("traversal possible");
         assert_eq!(laser.position, I8Vec2::new(-1, 3));
 
         // For y=6 the laser is absorbed again
         let laser = LaserTip::new(6, Right);
         let laser = laser.traverse_grid(&grid);
-        assert_eq!(laser, None);
+        assert_eq!(laser, (None, 3));
 
         // For y=7 the laser is reflected down.
         let laser = LaserTip::new(7, Right);
-        let laser = laser.traverse_grid(&grid).expect("traversal possible");
+        let laser = laser.traverse_grid(&grid).0.expect("traversal possible");
         assert_eq!(laser.position, I8Vec2::new(1, 8));
     }
 }
