@@ -144,6 +144,10 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub const fn all() -> [Direction; 4] {
+        [Up, Down, Left, Right]
+    }
+
     fn dxy(self) -> I8Vec2 {
         match self {
             Up => I8Vec2::new(0, -1),
