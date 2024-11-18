@@ -7,7 +7,7 @@
       ⇄ ? ? ? ? ? ? o . ×
       D ? ? ? ? ? ? ? ? ⇄
 
-- Hinter einer Reflektion ist immer min. ein Feld frei.
+- **IMPLEMENTED** Hinter einer Reflektion ist immer min. ein Feld frei.
 
 - **IMPLEMENTED** Wenn ein Buchstabe am Rand ist, dann sind vier Felder frei: (Beispiel B)
 
@@ -15,7 +15,7 @@
       A ? ? . . . ? ? ? B 
       . × A × B C D × ×
 
-- Ein × am Rand mit einem freien Feld direkt daneben bedeutet,
+- **IMPLEMENTED** Ein × am Rand mit einem freien Feld direkt davor bedeutet,
   dass die diagonal-Felder auch frei sind.
 
 ~ Ein × am Rand mit freier Fläche "davor und bis zum Rand darunter" gibt uns auch eine freie Reihe.

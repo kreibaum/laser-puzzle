@@ -4,7 +4,7 @@ use crate::atom_grid::GRID_SIZE;
 use crate::i8vec2::I8Vec2;
 use crate::laser::Direction::{Down, Left, Right, Up};
 use crate::laser::LaserTip;
-use crate::observation::{Observations, LASER_REFLECTED};
+use crate::observation::{Observations, LASER_ABSORBED, LASER_REFLECTED};
 use crate::solver::GridKnowledge::{Empty, Unknown};
 use std::fmt::Write;
 use GridKnowledge::Atom;
@@ -94,6 +94,9 @@ pub fn solve_as_much_as_you_can(observations: &Observations) -> UncertainGrid {
     letter_finds_four_empty_spaces(&mut grid, observations);
     reflection_is_not_blocked(&mut grid, observations);
 
+    // Benefits from "Free field" information.
+    absorption_with_one_free_field(&mut grid, observations);
+
     grid
 }
 
@@ -104,6 +107,20 @@ fn reflection_is_not_blocked(grid: &mut UncertainGrid, observations: &Observatio
             let center = l.forward().position();
 
             grid.set_safe(center, Empty);
+        }
+    }
+}
+
+fn absorption_with_one_free_field(grid: &mut UncertainGrid, observations: &Observations) {
+    for (direction, shift, obs) in observations.iter() {
+        if obs == LASER_ABSORBED {
+            let l = LaserTip::new(shift as u8, direction);
+            let center = l.forward().position();
+
+            if grid.get(center) == Empty {
+                grid.set_safe(center + direction.clockwise().dxy(), Empty);
+                grid.set_safe(center + direction.counter_clockwise().dxy(), Empty);
+            }
         }
     }
 }

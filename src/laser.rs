@@ -159,7 +159,7 @@ impl Direction {
         [Up, Down, Left, Right]
     }
 
-    fn dxy(self) -> I8Vec2 {
+    pub fn dxy(self) -> I8Vec2 {
         match self {
             Up => I8Vec2::new(0, -1),
             Down => I8Vec2::new(0, 1),
@@ -168,7 +168,7 @@ impl Direction {
         }
     }
 
-    fn clockwise(self) -> Self {
+    pub fn clockwise(self) -> Self {
         match self {
             Up => Right,
             Right => Down,
@@ -177,7 +177,7 @@ impl Direction {
         }
     }
 
-    fn counter_clockwise(self) -> Self {
+    pub fn counter_clockwise(self) -> Self {
         match self {
             Up => Left,
             Left => Down,
@@ -186,7 +186,7 @@ impl Direction {
         }
     }
 
-    fn flip(self) -> Self {
+    pub fn flip(self) -> Self {
         match self {
             Up => Down,
             Down => Up,
