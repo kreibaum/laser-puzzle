@@ -54,6 +54,17 @@ impl LaserTip {
         }
     }
 
+    pub fn forward(self) -> Self {
+        LaserTip {
+            position: self.position + self.direction.dxy(),
+            direction: self.direction,
+        }
+    }
+
+    pub fn position(self) -> I8Vec2 {
+        self.position
+    }
+
     /// Creates a new laser tip following the movement rules on the given atom grid.
     ///
     /// Rule 1: If there is an atom in front, be absorbed.

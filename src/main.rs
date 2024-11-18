@@ -5,6 +5,7 @@ mod atom_grid;
 mod i8vec2;
 mod laser;
 mod observation;
+mod solver;
 
 fn main() {
     let g = AtomGrid::random(5);
@@ -12,5 +13,16 @@ fn main() {
     println!("BitBoard: {}", g.as_bitboard());
 
     let o = Observations::observe_all(&g);
-    println!("{}", observation::draw(&g, &o).expect("Failed to draw observation"));
+    println!(
+        "{}",
+        observation::draw(&g, &o).expect("Failed to draw observation")
+    );
+
+    let mut s = solver::UncertainGrid::default();
+    solver::letter_finds_four_empty_spaces(&mut s, &o);
+
+    println!(
+        "{}",
+        solver::draw(&s, &o).expect("Failed to draw solver state")
+    );
 }

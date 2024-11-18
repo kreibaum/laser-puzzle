@@ -17,7 +17,7 @@ impl I8Vec2 {
     }
 
     pub fn in_grid(&self) -> bool {
-        self.x >= 0 && self.x < 8 && self.y >= 0 && self.y < 8
+        self.x >= 0 && self.x < GRID_SIZE as i8 && self.y >= 0 && self.y < GRID_SIZE as i8
     }
 
     pub fn random() -> Self {

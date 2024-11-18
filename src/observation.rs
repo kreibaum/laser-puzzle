@@ -1,8 +1,8 @@
 use crate::atom_grid::{AtomGrid, GRID_SIZE};
+use crate::i8vec2::I8Vec2;
 use crate::laser::Direction::*;
 use crate::laser::{Direction, LaserTip};
 use std::fmt::{Display, Formatter, Write};
-use crate::i8vec2::I8Vec2;
 
 /// The observation is the information derived from an atom grid using a laser and available to the
 /// player. It is the player's job to use this information to determine the atom grid.
@@ -11,7 +11,7 @@ use crate::i8vec2::I8Vec2;
 #[derive(Debug)]
 pub struct Observations {
     next_observation: Observation,
-    sides: [[Observation; GRID_SIZE]; 4],
+    pub sides: [[Observation; GRID_SIZE]; 4],
 }
 
 impl Default for Observations {
@@ -67,13 +67,19 @@ impl Observations {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-struct Observation(u8);
+pub struct Observation(u8);
 
 const NOT_PROBED: Observation = Observation(0); // Special value
 const LASER_ABSORBED: Observation = Observation(1); // Special value
 const LASER_REFLECTED: Observation = Observation(2); // Special value
 
 const ALPHABET: &'static str = "ABCDEFGHKLMNPRSTUVWYZ"; // Exclude some letters
+
+impl Observation {
+    pub(crate) fn is_letter(self) -> bool {
+        self.0 >= 3
+    }
+}
 
 impl Display for Observation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
