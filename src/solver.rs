@@ -3,8 +3,8 @@
 use crate::atom_grid::GRID_SIZE;
 use crate::i8vec2::I8Vec2;
 use crate::laser::Direction::{Down, Left, Right, Up};
-use crate::laser::{Direction, LaserTip};
-use crate::observation::Observations;
+use crate::laser::LaserTip;
+use crate::observation::{Observations, LASER_REFLECTED};
 use crate::solver::GridKnowledge::{Empty, Unknown};
 use std::fmt::Write;
 use GridKnowledge::Atom;
@@ -88,20 +88,37 @@ impl Default for GridKnowledge {
     }
 }
 
-pub fn letter_finds_four_empty_spaces(grid: &mut UncertainGrid, observations: &Observations) {
-    for direction in Direction::all() {
-        for shift in 0..GRID_SIZE {
-            let obs = observations.sides[direction as usize][shift];
-            if obs.is_letter() {
-                let l = LaserTip::new(shift as u8, direction);
-                let center = l.forward().position();
+pub fn solve_as_much_as_you_can(observations: &Observations) -> UncertainGrid {
+    let mut grid = UncertainGrid::default();
 
-                grid.set_safe(center, Empty);
-                grid.set_safe(center + I8Vec2::new(0, 1), Empty);
-                grid.set_safe(center + I8Vec2::new(0, -1), Empty);
-                grid.set_safe(center + I8Vec2::new(1, 0), Empty);
-                grid.set_safe(center + I8Vec2::new(-1, 0), Empty);
-            }
+    letter_finds_four_empty_spaces(&mut grid, observations);
+    reflection_is_not_blocked(&mut grid, observations);
+
+    grid
+}
+
+fn reflection_is_not_blocked(grid: &mut UncertainGrid, observations: &Observations) {
+    for (direction, shift, obs) in observations.iter() {
+        if obs == LASER_REFLECTED {
+            let l = LaserTip::new(shift as u8, direction);
+            let center = l.forward().position();
+
+            grid.set_safe(center, Empty);
+        }
+    }
+}
+
+fn letter_finds_four_empty_spaces(grid: &mut UncertainGrid, observations: &Observations) {
+    for (direction, shift, obs) in observations.iter() {
+        if obs.is_letter() {
+            let l = LaserTip::new(shift as u8, direction);
+            let center = l.forward().position();
+
+            grid.set_safe(center, Empty);
+            grid.set_safe(center + I8Vec2::new(0, 1), Empty);
+            grid.set_safe(center + I8Vec2::new(0, -1), Empty);
+            grid.set_safe(center + I8Vec2::new(1, 0), Empty);
+            grid.set_safe(center + I8Vec2::new(-1, 0), Empty);
         }
     }
 }

@@ -64,14 +64,26 @@ impl Observations {
             self.sides[in_direction as usize][in_shift as usize] = LASER_ABSORBED;
         }
     }
+
+    /// Iterates over all observations
+    pub fn iter(&self) -> Vec<(Direction, u8, Observation)> {
+        let mut result = vec![];
+        for direction in Direction::all() {
+            for shift in 0..GRID_SIZE {
+                let obs = self.sides[direction as usize][shift];
+                result.push((direction, shift as u8, obs));
+            }
+        }
+        result
+    }
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Observation(u8);
 
-const NOT_PROBED: Observation = Observation(0); // Special value
-const LASER_ABSORBED: Observation = Observation(1); // Special value
-const LASER_REFLECTED: Observation = Observation(2); // Special value
+pub const NOT_PROBED: Observation = Observation(0); // Special value
+pub const LASER_ABSORBED: Observation = Observation(1); // Special value
+pub const LASER_REFLECTED: Observation = Observation(2); // Special value
 
 const ALPHABET: &'static str = "ABCDEFGHKLMNPRSTUVWYZ"; // Exclude some letters
 

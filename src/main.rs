@@ -18,9 +18,7 @@ fn main() {
         observation::draw(&g, &o).expect("Failed to draw observation")
     );
 
-    let mut s = solver::UncertainGrid::default();
-    solver::letter_finds_four_empty_spaces(&mut s, &o);
-
+    let s = solver::solve_as_much_as_you_can(&o);
     println!(
         "{}",
         solver::draw(&s, &o).expect("Failed to draw solver state")
