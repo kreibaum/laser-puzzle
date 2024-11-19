@@ -1,1 +1,4 @@
 /target
+/grids.csv
+/hidden_states.db
+/solutions.db

@@ -4,7 +4,7 @@ use crate::atom_grid::AtomGrid;
 use crate::i8vec2::I8Vec2;
 use crate::observation::Observations;
 use std::fmt::Write;
-
+use std::fs::File;
 
 mod atom_grid;
 mod i8vec2;
@@ -50,12 +50,15 @@ fn get_all_hidden_states(conn: &Connection, observation: &str) -> Result<Vec<Str
 }
 
 fn generate_all_grids(conn: &Connection) -> Result<()> {
-    for combination in (0..7).combinations(5){ // TODO: change 7 back to 64
+    let mut n = 0;
+    for combination in (0..20).combinations(5){ // TODO: change 7 back to 64
+        n += 1;
+        if n % 1000 == 0 { println!("{n}"); }
         let mut grid = AtomGrid::default(); // Creates an empty board
         for ele in &combination {
             grid.set(I8Vec2::new(ele % 8, ele / 8), true);
         }
-        println!("{:?}", combination);
+        // println!("{:?}", combination);
 
         let grid_bb = format!("{}", grid.as_bitboard());
         let obs = Observations::observe_all(&grid);
@@ -71,6 +74,27 @@ fn generate_all_grids(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+fn generate_all_grids_into_file(mut file: File) -> Result<()> {
+    use std::io::Write;
+    let mut n = 0;
+    for combination in (0..30).combinations(5){ // TODO: change 7 back to 64
+        n += 1;
+        if n % 10000 == 0 { println!("{n}"); }
+        let mut grid = AtomGrid::default(); // Creates an empty board
+        for ele in &combination {
+            grid.set(I8Vec2::new(ele % 8, ele / 8), true);
+        }
+        // println!("{:?}", combination);
+        write!(file, "{},", grid.as_bitboard()).unwrap();
+        let obs = Observations::observe_all(&grid);
+        for (_, _, obs) in obs.iter() {
+            write!(file, "{}", obs).unwrap();
+        }
+        write!(file, "\n").unwrap();
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match setup_database(){
         Ok(_) => println!("Database setup"),
@@ -78,6 +102,14 @@ fn main() -> Result<()> {
     }
 
     let conn = Connection::open("solutions.db")?;
+
+    // Open the file "grids.csv" and write to it
+    let mut file = File::create("grids.csv").unwrap();
+    generate_all_grids_into_file(file)?;
+
+    if 1<2{
+        return Ok(());
+    }
 
     generate_all_grids(&conn)?;
     println!("Data insertion done");
