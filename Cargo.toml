@@ -5,3 +5,12 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
+rusqlite = "0.32.1"
+
+[[bin]]
+name = "observer"
+path = "src/main.rs"
+
+[[bin]]
+name = "combinations"
+path = "src/database.rs"
