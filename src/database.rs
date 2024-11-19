@@ -77,9 +77,9 @@ fn generate_all_grids(conn: &Connection) -> Result<()> {
 fn generate_all_grids_into_file(mut file: File) -> Result<()> {
     use std::io::Write;
     let mut n = 0;
-    for combination in (0..30).combinations(5){ // TODO: change 7 back to 64
+    for combination in (0..64).combinations(5){ // TODO: change 7 back to 64
         n += 1;
-        if n % 10000 == 0 { println!("{n}"); }
+        if n % 100_000 == 0 { println!("{n}"); }
         let mut grid = AtomGrid::default(); // Creates an empty board
         for ele in &combination {
             grid.set(I8Vec2::new(ele % 8, ele / 8), true);
