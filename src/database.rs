@@ -1,5 +1,15 @@
+use itertools::Itertools;
 use rusqlite::{params, Connection, Result};
+use crate::atom_grid::AtomGrid;
+use crate::i8vec2::I8Vec2;
+use crate::observation::Observations;
+use std::fmt::Write;
 
+
+mod atom_grid;
+mod i8vec2;
+mod laser;
+mod observation;
 
 fn setup_database() -> Result<()> {
     let conn = Connection::open("solutions.db")?;
@@ -39,31 +49,44 @@ fn get_all_hidden_states(conn: &Connection, observation: &str) -> Result<Vec<Str
     Ok(hidden_states)
 }
 
-fn main(){
+fn generate_all_grids(conn: &Connection) -> Result<()> {
+    for combination in (0..7).combinations(5){ // TODO: change 7 back to 64
+        let mut grid = AtomGrid::default(); // Creates an empty board
+        for ele in &combination {
+            grid.set(I8Vec2::new(ele % 8, ele / 8), true);
+        }
+        println!("{:?}", combination);
+
+        let grid_bb = format!("{}", grid.as_bitboard());
+        let obs = Observations::observe_all(&grid);
+        let mut obs_string : String = "".to_string();
+        for (_, _, obs) in obs.iter() {
+            obs_string.write_str(&format!("{}", obs));
+        }
+        // println!("{}, {}", grid_bb, obs_string);
+
+        // Insert into database
+        insert_state(conn, &grid_bb, &obs_string)?;
+    }
+    Ok(())
+}
+
+fn main() -> Result<()> {
     match setup_database(){
         Ok(_) => println!("Database setup"),
         Err(e) => println!("Error database setup: {}", e)
     }
 
-    let conn = match Connection::open("solutions.db") {
-        Ok(conn) => conn,
-        Err(e) => {
-            println!("Error opening database: {}", e);
-            return;
-        }
-    };
-    
-    insert_state(&conn, "01-02-03-04-05", "32stringgoeshere");
-    insert_state(&conn, "02-02-03-04-05", "32stringgoeshere");
+    let conn = Connection::open("solutions.db")?;
 
-    match get_all_hidden_states(&conn, "32stringgoeshere") {
-        Ok(hidden_states) => {
-            println!("Hidden States:");
-            for state in hidden_states {
-                println!("{}", state);
-            }
-        },
-        Err(e) => println!("Error fetching hidden states: {}", e),
+    generate_all_grids(&conn)?;
+    println!("Data insertion done");
+
+    let hidden_states = get_all_hidden_states(&conn, "AB×××××CA⇄×××××⇄×CDEFGHK×BDEFGHK")?;
+    println!("Hidden States:");
+    for state in hidden_states {
+        println!("{}", state);
     }
-    println!("Sample data insertion done");
+
+    Ok(())
 }
